@@ -16,10 +16,15 @@ const generateAndSendOTP = async (user: User) => {
 
         const secret = String(Date.now());
         const token = totp.generate(secret);
-
+        const expiresIn = new Date(Date.now() + 10 * 60 * 1000);
         // Save otp to db
-
-
+        await prisma.oTP.create({
+            data : {
+                userId : user.id,
+                otp : parseInt(token,10),
+                expiresIn : expiresIn
+            }
+        })
         // OTP email
         await transporter.sendMail({
             from: process.env.FROM,
