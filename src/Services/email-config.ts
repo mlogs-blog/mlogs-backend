@@ -6,12 +6,12 @@ dotenv.config();
 const PORT = Number(process.env.MAILER_PORT) || 587;
 
 const transporter = nodemailer.createTransport({
-    service: "gmail", // Automatically sets host and port for Gmail
+    service: "outlook",
     port: PORT,
-    secure: PORT === 465, // true for port 465, false for other ports
+    secure: PORT === 465,
     auth: {
-        user: process.env.EMAIL, // Your Gmail address
-        pass: process.env.PASSWORD, // Your Gmail password or App Password
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
     },
 });
 

@@ -11,9 +11,10 @@ const generateAndSendOTP = async (user: User) => {
         // TOTP options
         totp.options = {
             step: 600, // 10 minutes
+            epoch: Date.now()
         };
 
-        const secret = process.env.SECRET || "default-secret";
+        const secret = String(Date.now());
         const token = totp.generate(secret);
 
         // Save otp to db
