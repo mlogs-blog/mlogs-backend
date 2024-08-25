@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(uuid())
+  email      String    @unique
+  username   String    @unique
+  name       String
+  password   String
+  role       ROLE      @default(USER)
+  isVerified Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  posts      Post[]
+  likes      Like[]
+  comments   Comment[]
+  OTP        OTP?
+}
+
+model Post {
+  id         String     @id @default(uuid())
+  title      String
+  body       String
+  author     User       @relation(fields: [userId], references: [id])
+  userId     String
+  likes      Like[]
+  comments   Comment[]
+  categories Category[] @relation("PostCategories") // Many-to-many relationship
+}
+
+model Like {
+  id     Int    @id @default(autoincrement())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+
+  @@unique([userId, postId]) // Ensures unique likes per user-post pair
+}
+
+model Comment {
+  id     Int    @id @default(autoincrement())
+  text   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+}
+
+model Category {
+  id    String @id @default(uuid())
+  text  String @unique
+  posts Post[] @relation("PostCategories") // Many-to-many relationship
+}
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  otp       Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  expiresIn DateTime
+}
+
+enum ROLE {
+  ADMIN
+  USER
+}
