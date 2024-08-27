@@ -61,7 +61,7 @@ const generateAndSendOTP = async (user: User) => {
             </body>`
         });
 
-        console.log(`OTP sent successfully ${token}`);
+        // console.log(`OTP sent successfully ${token}`);
         return true;
     } catch (error) {
         console.error('Error sending OTP:', error);
