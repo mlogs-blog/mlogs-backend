@@ -155,7 +155,10 @@ export const sendOTP = async (req: Request, res: Response) => {
             throw new CustomError(HttpStatusCode.InternalServerError,  "Unable to verify", ["Unable to sent OTP"]);
         }
 
-        const ans = APIResponse.create(HttpStatusCode.Created, "OTP sent successfully");
+        const ans = APIResponse.create(HttpStatusCode.Created, "OTP sent successfully", {
+            id : user.id,
+            isVerified : user.isVerified
+        });
         return res.status(HttpStatusCode.OK).json(ans.format());
     } catch (error) {
         if (error instanceof CustomError) {
