@@ -9,6 +9,8 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "ROLE" NOT NULL DEFAULT 'USER',
+    "isVerified" BOOLEAN NOT NULL DEFAULT false,
+    "isSubscribed" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -53,6 +55,17 @@ CREATE TABLE "Category" (
 );
 
 -- CreateTable
+CREATE TABLE "OTP" (
+    "id" SERIAL NOT NULL,
+    "secret" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "expiresIn" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "OTP_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_PostCategories" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL
@@ -69,6 +82,9 @@ CREATE UNIQUE INDEX "Like_userId_postId_key" ON "Like"("userId", "postId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Category_text_key" ON "Category"("text");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OTP_userId_key" ON "OTP"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_PostCategories_AB_unique" ON "_PostCategories"("A", "B");
@@ -90,6 +106,9 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OTP" ADD CONSTRAINT "OTP_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_PostCategories" ADD CONSTRAINT "_PostCategories_A_fkey" FOREIGN KEY ("A") REFERENCES "Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;

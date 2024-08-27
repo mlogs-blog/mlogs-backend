@@ -16,15 +16,27 @@ const generateAndSendOTP = async (user: User) => {
 
         const secret = String(Date.now());
         const token = totp.generate(secret);
-        const expiresIn = new Date(Date.now() + 10 * 60 * 1000);
+        const createdAt = new Date();
+        const expiresIn = new Date(createdAt.getTime() + 10 * 60 * 1000);
+
         // Save otp to db
-        await prisma.oTP.create({
-            data : {
-                userId : user.id,
-                otp : parseInt(token,10),
-                expiresIn : expiresIn
-            }
-        })
+        await prisma.oTP.upsert({
+            where: {
+                userId: user.id, // The unique identifier for the OTP record
+            },
+            update: {
+                secret,      // Update the secret
+                createdAt,   // Update the creation time
+                expiresIn,   // Update the expiration time
+            },
+            create: {
+                userId: user.id,  // Create a new OTP record with these values
+                secret,
+                createdAt,
+                expiresIn,
+            },
+        });
+
         // OTP email
         await transporter.sendMail({
             from: process.env.FROM,
@@ -50,9 +62,10 @@ const generateAndSendOTP = async (user: User) => {
         });
 
         console.log(`OTP sent successfully ${token}`);
-        return token;
+        return true;
     } catch (error) {
         console.error('Error sending OTP:', error);
+        return false
     }
 };
 
