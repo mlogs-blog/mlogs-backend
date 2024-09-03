@@ -28,6 +28,7 @@ model User {
   likes        Like[]
   comments     Comment[]
   secret       OTP?
+  refreshToken  RefreshToken?
 }
 
 model Post {
@@ -75,6 +76,15 @@ model OTP {
   expiresIn DateTime
 }
 
+model RefreshToken {
+  id                Int       @id @default(autoincrement())
+  refreshToken      String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+  userId            String    @unique
+  isBlocked         Boolean   @default(false)
+  createdAt         DateTime
+  expiresIn         DateTime
+}
 enum ROLE {
   ADMIN
   USER

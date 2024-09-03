@@ -6,14 +6,16 @@ import {
   SendOTPSchema,
   SigninSchema,
   SignupSchema,
-} from "../Utils/zod-schemas";
+} from "@devmayanktiwari/mlogs2.0";
 import { HttpStatusCode } from "../Utils/status-codes";
 import prisma from "../Services/prismaclient";
 import APIResponse from "../Utils/api-response";
 import CustomError from "../Utils/api-error";
 import generateAndSendOTP from "../Utils/send-otp";
 import { totp } from "otplib";
-
+import generateToken from "../Utils/generateToken";
+import setCookies from "../Utils/setCookies";
+import refreshAccessToken from "../Utils/refreshAccessToken";
 
 dotenv.config();
 
@@ -137,11 +139,32 @@ export const signin = async (req: Request, res: Response) => {
       ]);
     }
 
+    // Check if the user is verified send the token
+    if (user.isVerified) {
+      const {
+        accessToken,
+        accessTokenExpiry,
+        refreshToken,
+        refreshTokenExpiry,
+      } = await generateToken(user);
+
+      setCookies(
+        res,
+        accessToken,
+        accessTokenExpiry,
+        refreshToken,
+        refreshTokenExpiry
+      );
+    }
+
     // Return user
     const ans = APIResponse.create(HttpStatusCode.OK, "User found", {
       userId: user.id,
       username: user.username,
+      email: user.email,
+      isVerified: user.isVerified,
     });
+
     return res.status(HttpStatusCode.OK).json(ans.format());
   } catch (error) {
     if (error instanceof CustomError) {
@@ -186,11 +209,11 @@ export const sendOTP = async (req: Request, res: Response) => {
     if (!isEmailValid) {
       await prisma.user.update({
         where: {
-          id: parsed.data.userId
+          id: parsed.data.userId,
         },
         data: {
-          email: parsed.data.email
-        }
+          email: parsed.data.email,
+        },
       });
     }
 
@@ -243,7 +266,7 @@ export const verifyOTP = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: {
         email: parsed.data.email,
-        id: parsed.data.userId
+        id: parsed.data.userId,
       },
     });
 
@@ -316,5 +339,36 @@ export const verifyOTP = async (req: Request, res: Response) => {
         error: "Something went wrong.",
       });
     }
+  }
+};
+
+export const getNewAccessToken = async (req: Request, res: Response) => {
+  try {
+    // Get new access token
+    const tokens = await refreshAccessToken(req, res);
+
+    // Check if tokens are valid
+    if (!tokens) {
+      return res.status(500).json({ error: "Unable to refresh token" });
+    }
+
+    // Set new tokens to cookies
+    setCookies(
+      res,
+      tokens.newAccessToken,
+      tokens.newAccessTokenExpiry,
+      tokens.newRefreshToken,
+      tokens.newRefreshTokenExpiry
+    );
+
+    // Create and send a response
+    const ans = APIResponse.create(HttpStatusCode.OK, "Cookies updated");
+
+    return res.status(HttpStatusCode.OK).json(ans.format());
+  } catch (error) {
+    console.log("Error in refreshing new token: ", error);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
   }
 };

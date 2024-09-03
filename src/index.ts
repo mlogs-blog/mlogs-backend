@@ -1,24 +1,24 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import cookieparser from "cookie-parser"
-import passport from "passport"
-
-const app = express()
+import cookieparser from "cookie-parser";
+import passport from "passport";
 
 // Route imports
 import userAuth from "./Routes/userAuth";
+import protectedRoutes from "./Routes/protectedRoutes";
 
 // CONSTANTS
-dotenv.config()
-const PORT = process.env.PORT ;
+dotenv.config();
+const app = express();
+const PORT = process.env.PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
 // CORS Config
 const corsOptions = {
-    origin: FRONTEND_URL,
-    credentials: true,
-    optionsSuccessStatus: 200
+  origin: FRONTEND_URL,
+  credentials: true,
+  optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 
@@ -29,15 +29,18 @@ app.use(cookieparser());
 app.use(express.json());
 
 // Passport
-app.use(passport.initialize())
+app.use(passport.initialize());
 
 // Health check
 app.get("/api/v1/health", (req, res) => {
-    res.status(200).json("Server is healthy");
-})
+  res.status(200).json("Server is healthy");
+});
 
-// User routes for posting blogs
+// User routes
 app.use("/api/v1/user/auth", userAuth);
+
+// Protected Routes
+app.use("/api/v1/user/protected", protectedRoutes);
 // app.use("/api/v1/blogs", getBlogs);
 // app.use("/api/v1/reactions", reactionHandler);
 
@@ -46,8 +49,7 @@ app.use("/api/v1/user/auth", userAuth);
 // app.use("/api/v1/admin/auth", adminRoutes);
 
 app.listen(PORT, () => {
-    console.log(`App is running on port ${PORT}`);
-})
+  console.log(`App is running on port ${PORT}`);
+});
 
 export default app;
-
